@@ -78,6 +78,9 @@ int main() {
 	//Variables to control time itself
 	Clock clock;
 
+	//Track if the game is running
+	bool paused = true;
+
 	while (window.isOpen())
 	{
 		//****************
@@ -86,6 +89,12 @@ int main() {
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
+		}
+
+		//Start the game
+		if (Keyboard::isKeyPressed(Keyboard::Return))
+		{
+			paused = false;
 		}
 
 
@@ -152,6 +161,7 @@ int main() {
 			}
 		}
 
+		//Cloud 2
 		if (!cloud2Active)
 		{
 			//How fast is the cloud
@@ -178,6 +188,7 @@ int main() {
 			}
 		}
 
+		//Cloud 3
 		if (!cloud3Active)
 		{
 			//How fast is the cloud
