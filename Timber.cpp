@@ -1,5 +1,6 @@
 //Start with necessary libraries
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <sstream>
 
 //Make things easier on ourself
@@ -199,11 +200,46 @@ int main() {
 	//Control player input
 	bool acceptInput = false;
 
+	//Prepare the audio files
+	//Player chopping sound
+	SoundBuffer chopBuffer;
+	chopBuffer.loadFromFile("sound/chop.wav");
+	Sound chop;
+	chop.setBuffer(chopBuffer);
+
+	//Death Sound
+	SoundBuffer deathBuffer;
+	deathBuffer.loadFromFile("sound/death.wav");
+	Sound death;
+	death.setBuffer(deathBuffer);
+
+	//Out of time
+	SoundBuffer ootBuffer;
+	ootBuffer.loadFromFile("sound/out_of_time.wav");
+	Sound outOfTime;
+	outOfTime.setBuffer(ootBuffer);
+
 	while (window.isOpen())
 	{
 		//****************
 		//Handle player input
 		//****************
+
+		Event event;
+
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && !paused)
+			{
+				//Listen for presses again
+				acceptInput = true;
+
+				//hide the axe
+				spriteAxe.setPosition(2000, spriteAxe.getPosition().y);
+			}
+		}
+
+
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
@@ -260,6 +296,9 @@ int main() {
 				logActive = true;
 
 				acceptInput = false;
+
+				//Play a chop!
+				chop.play();
 			}
 
 			//Handle the left cursor key
@@ -286,6 +325,9 @@ int main() {
 				logActive = true;
 
 				acceptInput = false;
+
+				//Play a chop!
+				chop.play();
 			}
 		}
 
@@ -303,7 +345,7 @@ int main() {
 			//Size up the time bar
 			timeBar.setSize(Vector2f(timeBarWidthPerSecond * timeRemaining, timeBarHeight));
 
-			if (timeRemaining <= 0.0f)
+			if (timeRemaining <= 0.f)
 			{
 				//Pause the game
 				paused = true;
@@ -317,6 +359,9 @@ int main() {
 					textRect.top + textRect.height / 2.0f);
 
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				//Play the Out of Time sound
+				outOfTime.play();
 			}
 
 			//Setup bee movement
@@ -460,6 +505,49 @@ int main() {
 					//Hide the branch
 					branches[i].setPosition(3000, height);
 				}
+			}
+
+			//Handle a flying log
+			if (logActive)
+			{
+				spriteLog.setPosition(spriteLog.getPosition().x + (logSpeedX * dt.asSeconds()),
+					spriteLog.getPosition().y + (logSpeexY * dt.asSeconds()));
+
+				//Has the log reached the end?
+				if (spriteLog.getPosition().x < -100 || spriteLog.getPosition().x > 2000)
+				{
+					//Set it up ready to be a whole new log next frame
+					logActive = false;
+					spriteLog.setPosition(810, 720);
+				}
+			}
+
+			//Has the player been squish-squashed?
+			if (branchPositions[5] == playerSide)
+			{
+				//Ded.
+				paused = true;
+				acceptInput = false;
+
+				//Draw the gravestone
+				spriteRIP.setPosition(525, 760);
+
+				//Hide the player
+				spritePlayer.setPosition(2000, 660);
+
+				//Change the text of the message
+				messageText.setString("SQUISHED!!");
+
+				//Center it on the screen
+				FloatRect textRect = messageText.getLocalBounds();
+
+				messageText.setOrigin(textRect.left + textRect.width / 2.0f, 
+					textRect.top + textRect.height / 2.0f);
+
+				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				//Play the death sound
+				death.play();
 			}
 
 		} //The end of the if-paused
